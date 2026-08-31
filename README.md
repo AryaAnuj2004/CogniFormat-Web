@@ -61,41 +61,6 @@ CogniFormat Web/
 
 ---
 
-## 💻 Installation & Running Locally
-
-### Prerequisites
-
-- Python 3.9 or higher
-- Git
-
-### Quickstart Steps
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/AryaAnuj2004/CogniFormat-Web.git
-   cd CogniFormat-Web
-   ```
-
-2. **Create and activate a virtual environment:**
-   ```bash
-   # Windows (PowerShell)
-   python -m venv .venv
-   .\.venv\Scripts\Activate.ps1
-   ```
-
-3. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Launch the Web Portal:**
-   ```bash
-   streamlit run app.py
-   ```
-
-   The app will open automatically in your browser at `http://localhost:8501`.
-
----
 
 ## ⚙️ Environment Variables
 
@@ -115,11 +80,6 @@ Optional environment variables can be configured:
 - **`email-validator`** — Email syntax verification
 - **`dnspython`** — Live DNS MX record checking
 
----
-
-## 📜 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
 
 ---
 
