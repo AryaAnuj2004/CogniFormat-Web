@@ -1,0 +1,18 @@
+# Python & Virtual Environments
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Private Binaries & Downloads (Do NOT commit to GitHub)
+assets/downloads/*.exe
+assets/downloads/*.msi
+assets/downloads/*.zip
+
+# Private User Data & Leads
+data/leads.csv
+data/*.csv
+
+# Environment & Config
+.env
+.env.local
