@@ -21,7 +21,7 @@ This web application built with Streamlit serves as the distribution platform fo
   - **Authoritative DNS MX Resolution**: Performs live Mail Exchange (MX) DNS queries via `dnspython` to verify domain authenticity.
 - 📊 **Lead Data Tracking**: Automatically stores verified user registrations in `data/leads.csv`.
 - 🎨 **Premium Aesthetic & Custom Design**: Custom CSS styling with Google Fonts (*Plus Jakarta Sans* and *Inter*), smooth gradients, card hover animations, and hidden default Streamlit chrome.
-- 🖼️ **Visual Workspace Gallery**: Interactive before/after workspace previews and high-speed batch queue manager screenshots.
+- 🖼️ **Interactive Screenshot Slider**: Modern single-tab slider UI showcasing all 8 application screenshots (Starter Dashboard, AI Enhancer, BG Removal, Video Trimmer, Audio Studio, CogniBot, Dark Mode, Light Mode) with interactive thumbnail ribbons, auto-play, and gesture support.
 - 💻 **System Requirements & Setup Guide**: Built-in interactive guides for quick onboarding.
 
 ---
@@ -45,14 +45,20 @@ CogniFormat Desktop is a hardware-accelerated, zero-subscription desktop softwar
 
 ```text
 CogniFormat Web/
-├── app.py                  # Main Streamlit Web Application
+├── app.py                  # Main Streamlit Web Application & Screenshot Slider
 ├── requirements.txt        # Python dependencies
 ├── .gitignore              # Git ignore rules for virtualenvs, leads, and binaries
 ├── assets/                 # App logos, brand assets, and screenshots
 │   ├── logo_black.png
 │   ├── screenshots/
-│   │   ├── dashboard.jpg
-│   │   └── batch.jpg
+│   │   ├── Starter.png
+│   │   ├── Enhance.png
+│   │   ├── BG Remove.png
+│   │   ├── Trim Video.png
+│   │   ├── Trim Audio.png
+│   │   ├── ChatBot.png
+│   │   ├── Dark Mode.png
+│   │   └── Light Mode.png
 │   └── downloads/          # Local setup executable target directory
 │       └── CogniFormat_Setup.exe (ignored in git)
 └── data/                   # Generated leads CSV store
