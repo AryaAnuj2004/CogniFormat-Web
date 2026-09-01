@@ -16,3 +16,5 @@ data/*.csv
 # Environment & Config
 .env
 .env.local
+.streamlit/secrets.toml
+

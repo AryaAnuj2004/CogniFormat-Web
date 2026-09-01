@@ -10,6 +10,8 @@ import re
 import socket
 import dns.resolver
 from email_validator import validate_email, EmailNotValidError
+import requests
+
 
 # Paths
 ASSETS_DIR = os.path.join(os.path.dirname(__file__), "assets")
@@ -1012,12 +1014,13 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Save Lead Function (New entry if Name or Email is different)
+# Save Lead Function (Save locally and sync to Google Sheets securely if configured)
 def save_lead(name: str, email: str):
     clean_name = name.strip()
     clean_email = email.strip().lower()
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
+    # 1. Local CSV Backup
     if os.path.exists(LEADS_FILE) and os.path.getsize(LEADS_FILE) > 0:
         try:
             df = pd.read_csv(LEADS_FILE)
@@ -1049,6 +1052,28 @@ def save_lead(name: str, email: str):
     
     df = df.drop(columns=['Name_Clean', 'Email_Clean'])
     df.to_csv(LEADS_FILE, index=False)
+
+    # 2. Secure Google Sheets Integration via Streamlit Secrets
+    webhook_url = None
+    try:
+        if "GOOGLE_SHEET_WEBHOOK_URL" in st.secrets:
+            webhook_url = st.secrets["GOOGLE_SHEET_WEBHOOK_URL"]
+    except Exception:
+        pass
+    if not webhook_url:
+        webhook_url = os.getenv("GOOGLE_SHEET_WEBHOOK_URL", "").strip()
+
+    if webhook_url:
+        try:
+            payload = {
+                "timestamp": now_str,
+                "name": clean_name,
+                "email": clean_email
+            }
+            requests.post(webhook_url, json=payload, timeout=4)
+        except Exception:
+            pass
+
 
 # Session State
 if "unlocked" not in st.session_state:
