@@ -34,20 +34,32 @@ logo_icon = Image.open(LOGO_PATH) if os.path.exists(LOGO_PATH) else None
 SCREENSHOTS_METADATA = [
     {
         "filename": "Starter.png",
-        "title": "Starter / Main Studio Dashboard",
-        "badge": "Main Hub",
-        "desc": "Central studio hub offering quick 1-click navigation to Image, Video, Audio, and PDF tools."
+        "title": "Main Application Window Loading",
+        "badge": "Main Loading Screen",
+        "desc": "First look at the main application window as it initializes with a smooth fade-in transition."
+    },
+    {
+        "filename": "Dark Mode.png",
+        "title": "Sleek High-Contrast Dark Theme",
+        "badge": "Dark-Interface",
+        "desc": "Modern dark mode engineered for comfortable low-light editing and reduced eye fatigue."
+    },
+    {
+        "filename": "Light Mode.png",
+        "title": "Clean High-Clarity Light Theme",
+        "badge": "Light-Interface",
+        "desc": "Vibrant light interface designed for daytime productivity, clear contrast, and crisp visual hierarchy."
     },
     {
         "filename": "Enhance.png",
         "title": "AI Image Enhancer & Upscaler",
-        "badge": "Local AI",
+        "badge": "AI-Image-Enhancer",
         "desc": "Super-resolution neural model upscaling low-res photos into high-definition crisp images offline."
     },
     {
         "filename": "BG Remove.png",
-        "title": "1-Click AI Background Removal",
-        "badge": "Local AI",
+        "title": "AI Background Remover and Editor",
+        "badge": "AI-Image-Background-Remover",
         "desc": "Extract subjects, products, or logos automatically with clean transparent background output."
     },
     {
@@ -67,18 +79,6 @@ SCREENSHOTS_METADATA = [
         "title": "CogniBot — Offline AI Assistant",
         "badge": "AI Assistant",
         "desc": "In-app offline assistant providing instant guidance on format options and app tools without sending data online."
-    },
-    {
-        "filename": "Dark Mode.png",
-        "title": "Sleek High-Contrast Dark Theme",
-        "badge": "Interface",
-        "desc": "Modern dark mode engineered for comfortable low-light editing and reduced eye fatigue."
-    },
-    {
-        "filename": "Light Mode.png",
-        "title": "Clean High-Clarity Light Theme",
-        "badge": "Interface",
-        "desc": "Vibrant light interface designed for daytime productivity, clear contrast, and crisp visual hierarchy."
     }
 ]
 
@@ -100,7 +100,7 @@ def get_all_screenshots_data():
 def render_modern_screenshot_slider(slider_id="hero_slider", viewport_height=320, frame_height=520):
     screenshots = get_all_screenshots_data()
     if not screenshots:
-        st.warning("No screenshot images found in assets/screenshots.")
+        st.warning("no screenshot images found.")
         return
 
     json_data = json.dumps(screenshots)
@@ -132,11 +132,12 @@ def render_modern_screenshot_slider(slider_id="hero_slider", viewport_height=320
             border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 16px;
             padding: 14px;
-            box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.5);
+            box-shadow: none;
             display: flex;
             flex-direction: column;
             gap: 10px;
             max-width: 100%;
+            margin: 2px 2px 6px 2px;
         }}
         
         .slider-header {{
@@ -844,7 +845,20 @@ st.markdown("""
         border: 1px solid #cbd5e1 !important;
         border-radius: 16px !important;
         padding: 1.5rem !important;
+        margin-top: 1.8rem !important;
+        margin-bottom: 1.8rem !important;
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    [data-testid="stVerticalBlockBorderWrapper"] [data-testid="column"]:nth-child(2) {
+        border-left: 1px solid #e2e8f0 !important;
+        padding-left: 1.5rem !important;
+    }
+
+    [data-testid="stVerticalBlockBorderWrapper"] [data-testid="column"]:nth-child(2) [data-testid="stDownloadButton"],
+    [data-testid="stVerticalBlockBorderWrapper"] [data-testid="column"]:nth-child(2) [data-testid="stLinkButton"] {
+        margin-left: 0 !important;
+        width: 100% !important;
     }
 
     .download-card {
@@ -1000,17 +1014,43 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Save Lead Function
+# Save Lead Function (New entry if Name or Email is different)
 def save_lead(name: str, email: str):
-    new_data = pd.DataFrame([{
-        "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "Name": name.strip(),
-        "Email": email.strip().lower()
-    }])
-    if os.path.exists(LEADS_FILE):
-        new_data.to_csv(LEADS_FILE, mode='a', header=False, index=False)
+    clean_name = name.strip()
+    clean_email = email.strip().lower()
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    if os.path.exists(LEADS_FILE) and os.path.getsize(LEADS_FILE) > 0:
+        try:
+            df = pd.read_csv(LEADS_FILE)
+            if not {'Timestamp', 'Name', 'Email'}.issubset(df.columns):
+                df = pd.DataFrame(columns=["Timestamp", "Name", "Email"])
+        except Exception:
+            df = pd.DataFrame(columns=["Timestamp", "Name", "Email"])
     else:
-        new_data.to_csv(LEADS_FILE, mode='w', header=True, index=False)
+        df = pd.DataFrame(columns=["Timestamp", "Name", "Email"])
+    
+    df['Name_Clean'] = df['Name'].astype(str).str.strip().str.lower()
+    df['Email_Clean'] = df['Email'].astype(str).str.strip().str.lower()
+    
+    # Check if exact (Name, Email) combination already exists
+    match_mask = (df['Name_Clean'] == clean_name.lower()) & (df['Email_Clean'] == clean_email)
+    
+    if match_mask.any():
+        idx = df[match_mask].index[0]
+        df.loc[idx, 'Timestamp'] = now_str
+        df.loc[idx, 'Name'] = clean_name
+        df.loc[idx, 'Email'] = clean_email
+    else:
+        new_row = pd.DataFrame([{
+            "Timestamp": now_str,
+            "Name": clean_name,
+            "Email": clean_email
+        }])
+        df = pd.concat([df, new_row], ignore_index=True)
+    
+    df = df.drop(columns=['Name_Clean', 'Email_Clean'])
+    df.to_csv(LEADS_FILE, index=False)
 
 # Session State
 if "unlocked" not in st.session_state:
@@ -1030,7 +1070,7 @@ st.markdown(f"""
         <span class="brand-title">CogniFormat</span>
     </div>
     <div class="version-pill">
-        <span class="dot-active"></span> Windows v1.0.0 Official Release
+        <span class="dot-active"></span> Windows v1.0 Official Release
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -1054,6 +1094,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==================== MAIN SECTION: DOWNLOAD GATE ====================
+st.markdown("<div style='height:24px;'></div>", unsafe_allow_html=True)
 with st.container(border=True):
     dl_col_left, dl_col_right = st.columns([1, 1])
 
@@ -1085,18 +1126,18 @@ with st.container(border=True):
     with dl_col_right:
         if not st.session_state.unlocked:
             st.markdown("""
-            <div style="height: 100%; display: flex; flex-direction: column; justify-content: space-between; border-left: 1px solid #e2e8f0; padding-left: 1.5rem;">
+            <div style="height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
                 <div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                         <div class="card-title" style="margin-bottom: 0;">Download CogniFormat for Windows</div>
                         <span style="background: #fffbeb; border: 1px solid #fde68a; color: #b45309; font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 20px;">🔒 Locked</span>
                     </div>
-                    <div class="card-sub">EXE Installer — Version 1.0.0 (Windows 10/11 64-bit)</div>
+                    <div class="card-sub">EXE Installer — Version 1.0 (Windows 10/11 64-bit)</div>
                     <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 14px; margin: 12px 0; font-size: 0.84rem; color: #475569; line-height: 1.6;">
-                        <div style="font-weight: 700; color: #0f172a; margin-bottom: 4px;">📥 Activation Steps:</div>
+                        <div style="font-weight: 700; color: #0f172a; margin-bottom: 4px;">Activation Steps:</div>
                         1. Enter your name and authorized email on the left.<br>
-                        2. Automatic DNS MX resolution validates your domain.<br>
-                        3. Your 1-click Windows installer download button appears right here!
+                        2. Automatically verifies your domain configuration.<br>
+                        3. Your Windows installer download button appears right here!
                     </div>
                 </div>
                 <div class="notice-locked" style="margin-top: 8px;">
@@ -1106,17 +1147,18 @@ with st.container(border=True):
             """, unsafe_allow_html=True)
         else:
             st.markdown(f"""
-            <div style="height: 100%; display: flex; flex-direction: column; justify-content: space-between; border-left: 1px solid #e2e8f0; padding-left: 1.5rem;">
+            <div style="margin-bottom: 16px;">
                 <div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                         <div class="card-title" style="margin-bottom: 0;">Download CogniFormat for Windows</div>
-                        <span style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 20px;">✅ Unlocked</span>
+                        <span style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 20px;">🔓 Unlocked</span>
                     </div>
-                    <div class="card-sub">EXE Installer — Version 1.0.0 (Windows 10/11 64-bit)</div>
-                    <div class="notice-unlocked" style="margin-top: 4px; margin-bottom: 16px;">
-                        ✅ Authorized email verified for <b>{st.session_state.user_name}</b> ({st.session_state.user_email}). Click below to download your 1-click installer.
+                    <div class="card-sub">EXE Installer — Version 1.0 (Windows 10/11 64-bit)</div>
+                    <div class="notice-unlocked" style="margin-top: 4px;">
+                        Authorized email verified for <b>{st.session_state.user_name}</b> ({st.session_state.user_email}). Click below to download your 1-click installer.
                     </div>
                 </div>
+            </div>
             """, unsafe_allow_html=True)
 
             SETUP_EXE_URL = os.getenv("SETUP_EXE_URL", "").strip()
@@ -1125,18 +1167,16 @@ with st.container(border=True):
                 with open(EXE_PATH, "rb") as f:
                     bytes_data = f.read()
                 st.download_button(
-                    label="🚀 Download CogniFormat_Setup.exe (v1.0.0)",
+                    label="Download CogniFormat_Setup.exe (v1.0)",
                     data=bytes_data,
                     file_name="CogniFormat_Setup.exe",
                     mime="application/octet-stream",
                     use_container_width=True
                 )
             elif SETUP_EXE_URL:
-                st.link_button("🚀 Download CogniFormat_Setup.exe (v1.0.0)", SETUP_EXE_URL, use_container_width=True)
+                st.link_button("Download CogniFormat_Setup.exe (v1.0)", SETUP_EXE_URL, use_container_width=True)
             else:
                 st.error("Installer executable file missing from assets directory.")
-
-            st.markdown("</div>", unsafe_allow_html=True)
 
 st.markdown("<div style='height:24px;'></div>", unsafe_allow_html=True)
 
@@ -1202,11 +1242,11 @@ st.markdown("<div style='height:28px;'></div>", unsafe_allow_html=True)
 st.markdown("""
 <div class="section-header">
     <div class="section-title">Application Screenshots Showcase</div>
-    <div class="section-desc">Interactive visual tour of CogniFormat Desktop's 8 power studios, dark & light themes, and local AI tools</div>
+    <div class="section-desc">Interactive visual tour of CogniFormat Desktop, dark & light themes, and local AI tools</div>
 </div>
 """, unsafe_allow_html=True)
 
-render_modern_screenshot_slider(slider_id="full_gallery_slider", viewport_height=420, frame_height=630)
+render_modern_screenshot_slider(slider_id="full_gallery_slider", viewport_height=420, frame_height=610)
 
 st.markdown("<div style='height:28px;'></div>", unsafe_allow_html=True)
 
@@ -1624,7 +1664,7 @@ st.markdown("<div style='height:32px;'></div>", unsafe_allow_html=True)
 st.markdown("""
 <hr style="border: 0; height: 1px; background: #e2e8f0; margin-bottom: 1.5rem;">
 <div style="text-align: center; color: #64748b; font-size: 0.85rem; padding-bottom: 1rem;">
-    <p style="margin-bottom: 4px;"><b>CogniFormat Desktop</b> • Version 1.0.0 — Official Web Release</p>
+    <p style="margin-bottom: 4px;"><b>CogniFormat Desktop</b> • Version 1.0 — Official Web Release</p>
     <p style="margin-bottom: 0;">100% Private Local Processing • Built for Windows 10 & 11 (64-bit) • © CogniFormat</p>
 </div>
 """, unsafe_allow_html=True)
