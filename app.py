@@ -653,12 +653,10 @@ st.markdown("""
     }
     
     .brand-title {
-        font-size: 1.3rem;
+        font-size: 1.45rem;
         font-weight: 800;
-        background: linear-gradient(135deg, #0f172a 0%, #2563eb 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        letter-spacing: -0.5px;
+        color: #0084ff;
+        letter-spacing: -0.3px;
     }
 
     .version-pill {
