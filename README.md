@@ -3,7 +3,6 @@
 [![Windows Version](https://img.shields.io/badge/Windows-v1.0.0-blue.svg)](https://github.com/AryaAnuj2004/CogniFormat-Web)
 [![Streamlit App](https://img.shields.io/badge/Built%20With-Streamlit-FF4B4B.svg)](https://streamlit.io/)
 [![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB.svg)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 **CogniFormat Web** is the official web application and download portal for **CogniFormat Desktop** — an all-in-one, 100% offline, privacy-first AI media converter, document processor, and image enhancer for Windows.
 
@@ -47,7 +46,6 @@ CogniFormat Desktop is a hardware-accelerated, zero-subscription desktop softwar
 CogniFormat Web/
 ├── app.py                  # Main Streamlit Web Application & Screenshot Slider
 ├── requirements.txt        # Python dependencies
-├── .gitignore              # Git ignore rules for virtualenvs, leads, and binaries
 ├── assets/                 # App logos, brand assets, and screenshots
 │   ├── logo_black.png
 │   ├── screenshots/
@@ -59,24 +57,10 @@ CogniFormat Web/
 │   │   ├── ChatBot.png
 │   │   ├── Dark Mode.png
 │   │   └── Light Mode.png
-│   └── downloads/          # Local setup executable target directory
-│       └── CogniFormat_Setup.exe (ignored in git)
-└── data/                   # Generated leads CSV store
-    └── leads.csv (ignored in git)
 ```
 
 ---
 
-
-## ⚙️ Environment Variables
-
-Optional environment variables can be configured:
-
-| Variable | Description | Default |
-| :--- | :--- | :--- |
-| `SETUP_EXE_URL` | Fallback external direct download URL for `CogniFormat_Setup.exe` if the file is hosted on cloud storage instead of local disk `assets/downloads/`. | `""` |
-
----
 
 ## 📄 Dependencies
 
