@@ -1144,7 +1144,6 @@ with st.container(border=True):
                         st.session_state.unlocked = True
                         st.session_state.user_name = name_val
                         st.session_state.user_email = res_msg
-                        st.toast("Authorized Email Verified!", icon="✅")
 
     with dl_col_right:
         if not st.session_state.unlocked:
@@ -1233,14 +1232,27 @@ with st.container(border=True):
                 )
                 if st.session_state.download_clicked:
                     st.markdown("""
-                        <div style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; color: #1d4ed8; font-weight: 600; font-size: 0.88rem; margin-top: 10px;">
-                            <span style="font-size: 1.1rem;">⏳</span>
+                        <style>
+                            @keyframes sandClockRotate {
+                                0% { transform: rotate(0deg); }
+                                50% { transform: rotate(180deg); }
+                                100% { transform: rotate(360deg); }
+                            }
+                            .rotating-sand-clock {
+                                display: inline-block;
+                                font-size: 1.2rem;
+                                animation: sandClockRotate 2s linear infinite;
+                                vertical-align: middle;
+                            }
+                        </style>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px; color: #2563eb; font-weight: 600; font-size: 0.9rem;">
+                            <span class="rotating-sand-clock">⏳</span>
                             <span>Preparing the Download, please wait...</span>
                         </div>
                     """, unsafe_allow_html=True)
-                    st.toast("Preparing the Download, please wait...", icon="⏳")
             else:
                 st.error("Installer executable file is currently unavailable.")
+
 
 
 
