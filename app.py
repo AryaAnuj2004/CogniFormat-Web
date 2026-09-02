@@ -1240,8 +1240,8 @@ with st.container(border=True):
                             }
                             @keyframes fadeOutAndHide {
                                 0% { opacity: 1; max-height: 50px; margin-top: 10px; visibility: visible; }
-                                70% { opacity: 1; max-height: 50px; margin-top: 10px; visibility: visible; }
-                                95% { opacity: 0; max-height: 50px; margin-top: 10px; visibility: visible; }
+                                80% { opacity: 1; max-height: 50px; margin-top: 10px; visibility: visible; }
+                                98% { opacity: 0; max-height: 50px; margin-top: 10px; visibility: visible; }
                                 100% { opacity: 0; max-height: 0px; margin-top: 0px; padding: 0px; visibility: hidden; display: none; }
                             }
                             .rotating-sand-clock {
@@ -1257,7 +1257,7 @@ with st.container(border=True):
                                 color: #2563eb;
                                 font-weight: 600;
                                 font-size: 0.9rem;
-                                animation: fadeOutAndHide 3.5s forwards ease-in-out;
+                                animation: fadeOutAndHide 5s forwards ease-in-out;
                                 overflow: hidden;
                             }
                         </style>
