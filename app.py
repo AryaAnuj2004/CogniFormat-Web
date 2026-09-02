@@ -1247,7 +1247,7 @@ with st.container(border=True):
                         </style>
                         <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px; color: #2563eb; font-weight: 600; font-size: 0.9rem;">
                             <span class="rotating-sand-clock">⏳</span>
-                            <span>Preparing the Download, please wait...</span>
+                            <span>Preparing the File, please wait...</span>
                         </div>
                     """, unsafe_allow_html=True)
             else:
