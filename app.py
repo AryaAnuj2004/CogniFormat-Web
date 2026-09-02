@@ -1238,18 +1238,36 @@ with st.container(border=True):
                                 50% { transform: rotate(180deg); }
                                 100% { transform: rotate(360deg); }
                             }
+                            @keyframes fadeOutAndHide {
+                                0% { opacity: 1; max-height: 50px; margin-top: 10px; visibility: visible; }
+                                70% { opacity: 1; max-height: 50px; margin-top: 10px; visibility: visible; }
+                                95% { opacity: 0; max-height: 50px; margin-top: 10px; visibility: visible; }
+                                100% { opacity: 0; max-height: 0px; margin-top: 0px; padding: 0px; visibility: hidden; display: none; }
+                            }
                             .rotating-sand-clock {
                                 display: inline-block;
                                 font-size: 1.2rem;
                                 animation: sandClockRotate 2s linear infinite;
                                 vertical-align: middle;
                             }
+                            .prep-file-animated-container {
+                                display: flex;
+                                align-items: center;
+                                gap: 8px;
+                                color: #2563eb;
+                                font-weight: 600;
+                                font-size: 0.9rem;
+                                animation: fadeOutAndHide 3.5s forwards ease-in-out;
+                                overflow: hidden;
+                            }
                         </style>
-                        <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px; color: #2563eb; font-weight: 600; font-size: 0.9rem;">
+                        <div class="prep-file-animated-container">
                             <span class="rotating-sand-clock">⏳</span>
                             <span>Preparing the File, please wait...</span>
                         </div>
                     """, unsafe_allow_html=True)
+                    st.session_state.download_clicked = False
+
             else:
                 st.error("Installer executable file is currently unavailable.")
 
