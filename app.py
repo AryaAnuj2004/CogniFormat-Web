@@ -1184,22 +1184,49 @@ with st.container(border=True):
             </div>
             """, unsafe_allow_html=True)
 
-            SETUP_EXE_URL = os.getenv("SETUP_EXE_URL", "").strip()
+            SETUP_EXE_URL = None
+            try:
+                if "SETUP_EXE_URL" in st.secrets:
+                    SETUP_EXE_URL = st.secrets["SETUP_EXE_URL"].strip()
+            except Exception:
+                pass
+            if not SETUP_EXE_URL:
+                SETUP_EXE_URL = os.getenv("SETUP_EXE_URL", "").strip()
 
+            @st.cache_data(show_spinner="Preparing 1-click installer download...", ttl=3600)
+            def load_installer_binary(path_or_url: str):
+                if os.path.exists(path_or_url):
+                    try:
+                        with open(path_or_url, "rb") as f:
+                            return f.read()
+                    except Exception:
+                        return None
+                elif path_or_url.startswith("http://") or path_or_url.startswith("https://"):
+                    try:
+                        res = requests.get(path_or_url, timeout=30)
+                        if res.status_code == 200:
+                            return res.content
+                    except Exception:
+                        return None
+                return None
+
+            exe_binary = None
             if os.path.exists(EXE_PATH):
-                with open(EXE_PATH, "rb") as f:
-                    bytes_data = f.read()
+                exe_binary = load_installer_binary(EXE_PATH)
+            elif SETUP_EXE_URL:
+                exe_binary = load_installer_binary(SETUP_EXE_URL)
+
+            if exe_binary:
                 st.download_button(
                     label="Download CogniFormat_Setup.exe (v1.0)",
-                    data=bytes_data,
+                    data=exe_binary,
                     file_name="CogniFormat_Setup.exe",
                     mime="application/octet-stream",
                     use_container_width=True
                 )
-            elif SETUP_EXE_URL:
-                st.link_button("Download CogniFormat_Setup.exe (v1.0)", SETUP_EXE_URL, use_container_width=True)
             else:
-                st.error("Installer executable file missing from assets directory.")
+                st.error("Installer executable file is currently unavailable.")
+
 
 st.markdown("<div style='height:24px;'></div>", unsafe_allow_html=True)
 
