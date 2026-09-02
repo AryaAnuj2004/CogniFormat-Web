@@ -11,6 +11,8 @@ import socket
 import dns.resolver
 from email_validator import validate_email, EmailNotValidError
 import requests
+import html
+
 
 
 # Paths
@@ -1168,7 +1170,10 @@ with st.container(border=True):
             </div>
             """, unsafe_allow_html=True)
         else:
+            safe_name = html.escape(str(st.session_state.user_name))
+            safe_email = html.escape(str(st.session_state.user_email))
             st.markdown(f"""
+
             <div style="margin-bottom: 16px;">
                 <div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -1177,11 +1182,12 @@ with st.container(border=True):
                     </div>
                     <div class="card-sub">EXE Installer — Version 1.0 (Windows 10/11 64-bit)</div>
                     <div class="notice-unlocked" style="margin-top: 4px;">
-                        Authorized email verified for <b>{st.session_state.user_name}</b> ({st.session_state.user_email}). Click below to download your 1-click installer.
+                        Authorized email verified for <b>{safe_name}</b> ({safe_email}). Click below to download your 1-click installer.
                     </div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
+
 
             SETUP_EXE_URL = None
             try:
