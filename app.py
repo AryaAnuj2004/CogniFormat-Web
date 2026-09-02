@@ -1210,15 +1210,17 @@ with st.container(border=True):
                         return None
                 return None
 
+            if "download_clicked" not in st.session_state:
+                st.session_state.download_clicked = False
+
             def on_download_click():
-                st.toast("Preparing the Download, please wait...", icon="⏳")
+                st.session_state.download_clicked = True
 
             exe_binary = None
-            with st.spinner("Preparing the Download, please wait..."):
-                if os.path.exists(EXE_PATH):
-                    exe_binary = load_installer_binary(EXE_PATH)
-                elif SETUP_EXE_URL:
-                    exe_binary = load_installer_binary(SETUP_EXE_URL)
+            if os.path.exists(EXE_PATH):
+                exe_binary = load_installer_binary(EXE_PATH)
+            elif SETUP_EXE_URL:
+                exe_binary = load_installer_binary(SETUP_EXE_URL)
 
             if exe_binary:
                 st.download_button(
@@ -1229,8 +1231,17 @@ with st.container(border=True):
                     use_container_width=True,
                     on_click=on_download_click
                 )
+                if st.session_state.download_clicked:
+                    st.markdown("""
+                        <div style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; color: #1d4ed8; font-weight: 600; font-size: 0.88rem; margin-top: 10px;">
+                            <span style="font-size: 1.1rem;">⏳</span>
+                            <span>Preparing the Download, please wait...</span>
+                        </div>
+                    """, unsafe_allow_html=True)
+                    st.toast("Preparing the Download, please wait...", icon="⏳")
             else:
                 st.error("Installer executable file is currently unavailable.")
+
 
 
 
