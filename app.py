@@ -1210,11 +1210,15 @@ with st.container(border=True):
                         return None
                 return None
 
+            def on_download_click():
+                st.toast("Preparing the Download, please wait...", icon="⏳")
+
             exe_binary = None
-            if os.path.exists(EXE_PATH):
-                exe_binary = load_installer_binary(EXE_PATH)
-            elif SETUP_EXE_URL:
-                exe_binary = load_installer_binary(SETUP_EXE_URL)
+            with st.spinner("Preparing the Download, please wait..."):
+                if os.path.exists(EXE_PATH):
+                    exe_binary = load_installer_binary(EXE_PATH)
+                elif SETUP_EXE_URL:
+                    exe_binary = load_installer_binary(SETUP_EXE_URL)
 
             if exe_binary:
                 st.download_button(
@@ -1222,10 +1226,12 @@ with st.container(border=True):
                     data=exe_binary,
                     file_name="CogniFormat_Setup.exe",
                     mime="application/octet-stream",
-                    use_container_width=True
+                    use_container_width=True,
+                    on_click=on_download_click
                 )
             else:
                 st.error("Installer executable file is currently unavailable.")
+
 
 
 st.markdown("<div style='height:24px;'></div>", unsafe_allow_html=True)
