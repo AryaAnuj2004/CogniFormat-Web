@@ -12,6 +12,11 @@ import dns.resolver
 from email_validator import validate_email, EmailNotValidError
 import requests
 import html
+import random
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
 
 
 
@@ -354,9 +359,21 @@ def render_modern_screenshot_slider(slider_id="hero_slider", viewport_height=320
             background: #38bdf8;
             border-radius: 4px;
         }}
+
+        img, .slide-img, .thumb-card img {{
+            -webkit-user-drag: none !important;
+            -khtml-user-drag: none !important;
+            -moz-user-drag: none !important;
+            -o-user-drag: none !important;
+            user-drag: none !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            -webkit-touch-callout: none !important;
+            pointer-events: none !important;
+        }}
     </style>
     </head>
-    <body>
+    <body oncontextmenu="return false;" ondragstart="return false;" onselectstart="return false;">
     
     <div class="slider-container" id="{slider_id}">
         <div class="slider-header">
@@ -387,7 +404,18 @@ def render_modern_screenshot_slider(slider_id="hero_slider", viewport_height=320
     </div>
     
     <script>
+        document.addEventListener("contextmenu", function(e) {{
+            e.preventDefault();
+            return false;
+        }}, true);
+        
+        document.addEventListener("dragstart", function(e) {{
+            e.preventDefault();
+            return false;
+        }}, true);
+
         const slidesData = {json_data};
+
         let currentIndex = 0;
         let autoplayTimer = null;
         let isPlaying = true;
@@ -539,7 +567,44 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# Application-wide Right-Click & Image Protection Script
+components.html("""
+<script>
+    try {
+        const doc = window.parent.document;
+        
+        // Suppress right-click context menu globally
+        doc.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            return false;
+        }, true);
+        
+        // Prevent dragging images
+        doc.addEventListener('dragstart', function(e) {
+            if (e.target.tagName === 'IMG') {
+                e.preventDefault();
+                return false;
+            }
+        }, true);
+        
+        // Block inspect & save keyboard shortcuts (Ctrl+S, Ctrl+U, F12, Ctrl+Shift+I)
+        doc.addEventListener('keydown', function(e) {
+            if (
+                e.keyCode === 123 ||
+                ((e.ctrlKey || e.metaKey) && (e.keyCode === 83 || e.keyCode === 85 || e.keyCode === 73 || e.keyCode === 74))
+            ) {
+                e.preventDefault();
+                return false;
+            }
+        }, true);
+    } catch (err) {
+        console.log("Protection active.");
+    }
+</script>
+""", height=0, width=0)
+
 os.makedirs(DATA_DIR, exist_ok=True)
+
 
 # List of known disposable / temporary email domain providers
 DISPOSABLE_DOMAINS = {
@@ -604,6 +669,19 @@ st.markdown("""
         visibility: hidden !important;
         display: none !important;
     }
+
+    /* Disable Image Dragging, Selection, and Context Menus */
+    img, svg, canvas {
+        -webkit-user-drag: none !important;
+        -khtml-user-drag: none !important;
+        -moz-user-drag: none !important;
+        -o-user-drag: none !important;
+        user-drag: none !important;
+        user-select: none !important;
+        -webkit-user-select: none !important;
+        -webkit-touch-callout: none !important;
+    }
+
     
     header, header[data-testid="stHeader"], [data-testid="stHeader"] {
         visibility: hidden !important;
@@ -846,16 +924,21 @@ st.markdown("""
         background: #ffffff !important;
         border: 1px solid #cbd5e1 !important;
         border-radius: 16px !important;
-        padding: 1.5rem !important;
+        padding: 1.6rem 1.6rem 2.2rem 1.6rem !important;
         margin-top: 1.8rem !important;
         margin-bottom: 1.8rem !important;
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    [data-testid="stVerticalBlockBorderWrapper"] [data-testid="column"] {
+        padding-bottom: 0.6rem !important;
     }
 
     [data-testid="stVerticalBlockBorderWrapper"] [data-testid="column"]:nth-child(2) {
         border-left: 1px solid #e2e8f0 !important;
         padding-left: 1.5rem !important;
     }
+
 
     [data-testid="stVerticalBlockBorderWrapper"] [data-testid="column"]:nth-child(2) [data-testid="stDownloadButton"],
     [data-testid="stVerticalBlockBorderWrapper"] [data-testid="column"]:nth-child(2) [data-testid="stLinkButton"] {
@@ -1077,13 +1160,76 @@ def save_lead(name: str, email: str):
             pass
 
 
-# Session State
+# Helper to send OTP Email via SMTP
+def send_otp_email(to_email: str, otp: str):
+    smtp_server = None
+    smtp_port = 587
+    smtp_email = None
+    smtp_password = None
+
+    try:
+        if "SMTP_EMAIL" in st.secrets and "SMTP_PASSWORD" in st.secrets:
+            smtp_server = st.secrets.get("SMTP_SERVER", "smtp.gmail.com")
+            smtp_port = int(st.secrets.get("SMTP_PORT", 587))
+            smtp_email = st.secrets.get("SMTP_EMAIL", "").strip()
+            smtp_password = st.secrets.get("SMTP_PASSWORD", "").strip()
+    except Exception:
+        pass
+
+    if not smtp_email:
+        smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+        smtp_port = int(os.getenv("SMTP_PORT", 587))
+        smtp_email = os.getenv("SMTP_EMAIL", "").strip()
+        smtp_password = os.getenv("SMTP_PASSWORD", "").strip()
+
+    if smtp_email and smtp_password:
+        try:
+            msg = MIMEMultipart()
+            msg['From'] = f"CogniFormat Verification <{smtp_email}>"
+            msg['To'] = to_email
+            msg['Subject'] = f"{otp} is your CogniFormat Verification Code"
+
+            body_text = f"""Hello,
+
+Your 6-digit verification code for CogniFormat Installer Download is:
+
+  {otp}
+
+Please enter this code on the website to verify your email address and unlock your download link.
+
+Best regards,
+CogniFormat Team
+"""
+            msg.attach(MIMEText(body_text, 'plain'))
+
+            server = smtplib.SMTP(smtp_server, smtp_port, timeout=10)
+            server.starttls()
+            server.login(smtp_email, smtp_password)
+            server.send_message(msg)
+            server.quit()
+            return True, "Verification OTP sent to your email inbox!"
+        except Exception as e:
+            return False, f"Could not send OTP email: {str(e)}"
+    else:
+        return False, "Could not send OTP email. SMTP server credentials are not configured in Streamlit secrets."
+
+
+# Session State Initialization
 if "unlocked" not in st.session_state:
     st.session_state.unlocked = False
 if "user_name" not in st.session_state:
     st.session_state.user_name = ""
 if "user_email" not in st.session_state:
     st.session_state.user_email = ""
+if "otp_sent" not in st.session_state:
+    st.session_state.otp_sent = False
+if "generated_otp" not in st.session_state:
+    st.session_state.generated_otp = ""
+if "pending_name" not in st.session_state:
+    st.session_state.pending_name = ""
+if "pending_email" not in st.session_state:
+    st.session_state.pending_email = ""
+
 
 # ==================== BRAND NAVIGATION BAR ====================
 logo_icon_html = f'<img src="data:image/png;base64,{logo_b64}" style="height: 38px; border-radius: 8px; object-fit: contain; vertical-align: middle;">' if logo_b64 else ''
@@ -1124,28 +1270,84 @@ with st.container(border=True):
     dl_col_left, dl_col_right = st.columns([1, 1])
 
     with dl_col_left:
-        st.markdown("""
-            <div class="card-title">Registration & Verification</div>
-            <div class="card-sub">Enter your full name and authorized email to activate installer download link</div>
-        """, unsafe_allow_html=True)
-        
-        with st.form("download_form"):
-            name_val = st.text_input("Name", value=st.session_state.user_name, placeholder="Enter your full name")
-            email_val = st.text_input("Authorized Email Address", value=st.session_state.user_email, placeholder="name@domain.com")
-            submit_btn = st.form_submit_button("Unlock Installer Download")
+        if not st.session_state.unlocked:
+            st.markdown("""
+                <div class="card-title">Registration & OTP Verification</div>
+                <div class="card-sub">Enter your full name and email to receive a 6-digit verification OTP</div>
+            """, unsafe_allow_html=True)
             
-            if submit_btn:
-                if not name_val.strip():
-                    st.error("Please enter your name.")
-                else:
-                    is_valid, res_msg = validate_authorized_email(email_val)
-                    if not is_valid:
-                        st.error(f"{res_msg}")
-                    else:
-                        save_lead(name_val, res_msg)
-                        st.session_state.unlocked = True
-                        st.session_state.user_name = name_val
-                        st.session_state.user_email = res_msg
+            if not st.session_state.otp_sent:
+                with st.form("request_otp_form"):
+                    name_val = st.text_input("Name", value=st.session_state.pending_name, placeholder="Enter your full name")
+                    email_val = st.text_input("Authorized Email Address", value=st.session_state.pending_email, placeholder="name@domain.com")
+                    send_otp_btn = st.form_submit_button("Send Verification OTP")
+                    
+                    if send_otp_btn:
+                        if not name_val.strip():
+                            st.error("Please enter your name.")
+                        else:
+                            is_valid, res_msg = validate_authorized_email(email_val)
+                            if not is_valid:
+                                st.error(f"{res_msg}")
+                            else:
+                                otp_code = f"{random.randint(100000, 999999)}"
+                                is_sent, send_msg = send_otp_email(res_msg, otp_code)
+                                if is_sent:
+                                    st.session_state.generated_otp = otp_code
+                                    st.session_state.pending_name = name_val.strip()
+                                    st.session_state.pending_email = res_msg
+                                    st.session_state.otp_sent = True
+                                    st.session_state.otp_notice = send_msg
+                                    st.rerun()
+                                else:
+                                    st.error(send_msg)
+            else:
+                if hasattr(st.session_state, "otp_notice") and st.session_state.otp_notice:
+                    st.success(f"📩 {st.session_state.otp_notice}")
+
+                st.markdown(f"""
+                <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; font-size: 0.85rem; color: #334155;">
+                    <b>Name:</b> {html.escape(st.session_state.pending_name)}<br>
+                    <b>Email:</b> {html.escape(st.session_state.pending_email)}
+                </div>
+                """, unsafe_allow_html=True)
+
+                with st.form("verify_otp_form"):
+                    otp_input = st.text_input("Enter 6-Digit OTP Code", placeholder="e.g. 123456", max_chars=6)
+                    verify_btn = st.form_submit_button("Verify OTP & Unlock Download")
+                    
+                    if verify_btn:
+                        if otp_input.strip() == st.session_state.generated_otp:
+                            save_lead(st.session_state.pending_name, st.session_state.pending_email)
+                            st.session_state.unlocked = True
+                            st.session_state.user_name = st.session_state.pending_name
+                            st.session_state.user_email = st.session_state.pending_email
+                            st.session_state.otp_sent = False
+                            st.rerun()
+                        else:
+                            st.error("Incorrect OTP verification code. Please check your email and try again.")
+                
+                if st.button("← Change Email / Resend OTP", key="reset_otp_btn"):
+                    st.session_state.otp_sent = False
+                    st.session_state.generated_otp = ""
+                    st.rerun()
+        else:
+            safe_name = html.escape(str(st.session_state.user_name))
+            safe_email = html.escape(str(st.session_state.user_email))
+            st.markdown(f"""
+            <div>
+                <div class="card-title">Registration & Verification</div>
+                <div class="card-sub" style="margin-bottom: 0.5rem;">Authenticated Session</div>
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 10px 14px; color: #15803d; font-size: 0.85rem; line-height: 1.45; margin-top: 2px; margin-bottom: 1.2rem;">
+                    <div style="font-weight: 800; font-size: 0.92rem; margin-bottom: 2px; display: flex; align-items: center; gap: 6px;">
+                        Verification Complete
+                    </div>
+                    Email <b>{safe_email}</b> has been authenticated via OTP for <b>{safe_name}</b>.
+                </div>
+
+            </div>
+            """, unsafe_allow_html=True)
+
 
     with dl_col_right:
         if not st.session_state.unlocked:
@@ -1170,23 +1372,17 @@ with st.container(border=True):
             </div>
             """, unsafe_allow_html=True)
         else:
-            safe_name = html.escape(str(st.session_state.user_name))
-            safe_email = html.escape(str(st.session_state.user_email))
-            st.markdown(f"""
-
-            <div style="margin-bottom: 16px;">
-                <div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <div class="card-title" style="margin-bottom: 0;">Download CogniFormat for Windows</div>
-                        <span style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 20px;">🔓 Unlocked</span>
-                    </div>
-                    <div class="card-sub">EXE Installer — Version 1.0 (Windows 10/11 64-bit)</div>
-                    <div class="notice-unlocked" style="margin-top: 4px;">
-                        Authorized email verified for <b>{safe_name}</b> ({safe_email}). Click below to download your 1-click installer.
-                    </div>
+            st.markdown("""
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <div class="card-title" style="margin-bottom: 0;">Download CogniFormat for Windows</div>
+                    <span style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 20px;">🔓 Unlocked</span>
                 </div>
+                <div class="card-sub" style="margin-bottom: 0.6rem;">EXE Installer — Version 1.0 (Windows 10/11 64-bit)</div>
             </div>
             """, unsafe_allow_html=True)
+
+
 
 
             SETUP_EXE_URL = None
