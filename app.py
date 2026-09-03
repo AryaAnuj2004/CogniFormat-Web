@@ -1207,7 +1207,7 @@ CogniFormat Team
             server.login(smtp_email, smtp_password)
             server.send_message(msg)
             server.quit()
-            return True, "Verification OTP sent to your email inbox! If you don't see email in you Primary inbox, Please check your spam folder as well."
+            return True, "Verification OTP sent to your email inbox! If you don't see the email in your primary inbox, please check your spam folder as well."
         except Exception as e:
             return False, f"Could not send OTP email: {str(e)}"
     else:
@@ -1303,7 +1303,11 @@ with st.container(border=True):
                                     st.error(send_msg)
             else:
                 if hasattr(st.session_state, "otp_notice") and st.session_state.otp_notice:
-                    st.success(f"📩 {st.session_state.otp_notice}")
+                    st.markdown(f"""
+                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; font-size: 0.85rem; line-height: 1.45; color: #15803d; font-weight: 500;">
+                        {html.escape(st.session_state.otp_notice)}
+                    </div>
+                    """, unsafe_allow_html=True)
 
                 st.markdown(f"""
                 <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; font-size: 0.85rem; color: #334155;">
