@@ -371,6 +371,50 @@ def render_modern_screenshot_slider(slider_id="hero_slider", viewport_height=320
             -webkit-touch-callout: none !important;
             pointer-events: none !important;
         }}
+
+        @media (max-width: 640px) {{
+            .slider-header {{
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+                padding: 10px 12px;
+            }}
+            .header-info {{
+                width: 100%;
+            }}
+            .title-row {{
+                flex-wrap: wrap;
+                gap: 6px;
+            }}
+            .slide-title {{
+                font-size: 0.88rem;
+                white-space: normal;
+                line-height: 1.25;
+            }}
+            .slide-desc {{
+                font-size: 0.75rem;
+                white-space: normal;
+                line-height: 1.3;
+                margin-top: 2px;
+            }}
+            .controls-top {{
+                width: 100%;
+                justify-content: space-between;
+                margin-top: 2px;
+            }}
+            .viewport {{
+                height: 280px !important;
+            }}
+            .thumb-card {{
+                flex: 0 0 60px;
+                height: 38px;
+            }}
+            .nav-arrow {{
+                width: 32px;
+                height: 32px;
+                font-size: 0.95rem;
+            }}
+        }}
     </style>
     </head>
     <body oncontextmenu="return false;" ondragstart="return false;" onselectstart="return false;">
@@ -1142,6 +1186,123 @@ st.markdown("""
     .stDownloadButton>button:hover {
         background: #15803d;
     }
+
+    /* Mobile Responsiveness Improvements */
+    @media (max-width: 768px) {
+        .block-container {
+            padding-top: 0.8rem !important;
+            padding-bottom: 2rem !important;
+            padding-left: 0.6rem !important;
+            padding-right: 0.6rem !important;
+        }
+
+        /* Top Nav Bar Mobile Responsiveness */
+        .top-nav {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 0.8rem 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .brand-title {
+            font-size: 1.25rem;
+        }
+
+        .version-pill, .download-pill {
+            font-size: 0.72rem;
+            padding: 3px 9px;
+        }
+
+        /* Hero Container Mobile Responsiveness */
+        .hero-container {
+            padding: 1.6rem 1rem;
+            border-radius: 16px;
+            margin-bottom: 1.2rem;
+        }
+
+        .hero-h1 {
+            font-size: 1.45rem !important;
+            line-height: 1.25 !important;
+            margin-bottom: 0.6rem !important;
+            letter-spacing: -0.4px !important;
+        }
+
+        .hero-sub {
+            font-size: 0.85rem !important;
+            line-height: 1.5 !important;
+            margin-bottom: 0.9rem !important;
+        }
+
+        .hero-badge {
+            font-size: 0.7rem !important;
+            padding: 4px 10px !important;
+            margin-bottom: 0.8rem !important;
+        }
+
+        .hero-highlights {
+            gap: 0.4rem;
+            font-size: 0.76rem;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 0.8rem;
+            padding-top: 0.8rem;
+        }
+
+        .hero-highlights span:nth-child(even) {
+            display: none !important;
+        }
+
+        /* Download Gate Cards Mobile Fix */
+        [data-testid="stVerticalBlockBorderWrapper"] {
+            padding: 1.2rem 1rem !important;
+            margin-top: 1rem !important;
+            margin-bottom: 1rem !important;
+            border-radius: 14px !important;
+        }
+
+        [data-testid="stVerticalBlockBorderWrapper"] [data-testid="column"]:nth-child(2) {
+            border-left: none !important;
+            border-top: 1px solid #e2e8f0 !important;
+            padding-left: 0 !important;
+            padding-top: 1.2rem !important;
+            margin-top: 1rem !important;
+        }
+
+        .card-title {
+            font-size: 1.15rem !important;
+        }
+
+        .card-sub {
+            font-size: 0.82rem !important;
+            margin-bottom: 0.8rem !important;
+        }
+
+        .section-title {
+            font-size: 1.35rem !important;
+        }
+
+        .section-desc {
+            font-size: 0.84rem !important;
+        }
+
+        .highlight-card {
+            padding: 1rem !important;
+            margin-bottom: 0.8rem;
+        }
+
+        .studio-box {
+            padding: 1rem !important;
+        }
+
+        .sys-table {
+            font-size: 0.8rem !important;
+        }
+
+        .sys-table th, .sys-table td {
+            padding: 8px 10px !important;
+        }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -1450,13 +1611,13 @@ with st.container(border=True):
                     <div class="card-sub">EXE Installer — Version 1.0 (Windows 10/11 64-bit)</div>
                     <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 14px; margin: 12px 0; font-size: 0.84rem; color: #475569; line-height: 1.6;">
                         <div style="font-weight: 700; color: #0f172a; margin-bottom: 4px;">Activation Steps:</div>
-                        1. Enter your name and authorized email on the left.<br>
-                        2. Automatically verifies your domain configuration.<br>
+                        1. Enter your name and authorized email in the form.<br>
+                        2. Receive a 6-digit OTP code to verify your inbox.<br>
                         3. Your Windows installer download button appears right here!
                     </div>
                 </div>
                 <div class="notice-locked" style="margin-top: 8px;">
-                    Enter an authorized email address on the left to activate your free download link.
+                    Complete email OTP verification in the form to activate your free download link.
                 </div>
             </div>
             """, unsafe_allow_html=True)
