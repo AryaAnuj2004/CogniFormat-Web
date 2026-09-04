@@ -16,6 +16,10 @@ import random
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import time
+import secrets
+import hmac
+import string
 
 
 
@@ -1402,7 +1406,7 @@ Your 6-digit verification code for CogniFormat Installer Download is:
 
   {otp}
 
-Please enter this code on the website to verify your email address and unlock your download link.
+This code is valid for 5 minutes only. Please enter this code on the website to verify your email address and unlock your download link.
 
 Best regards,
 CogniFormat Team
@@ -1414,7 +1418,7 @@ CogniFormat Team
             server.login(smtp_email, smtp_password)
             server.send_message(msg)
             server.quit()
-            return True, "Verification OTP sent to your email inbox! If you don't see the email in your primary inbox, please check your spam folder as well."
+            return True, "Verification OTP sent to your email inbox (valid for 5 minutes)! If you don't see the email in your primary inbox, please check your spam folder as well."
         except Exception as e:
             return False, f"Could not send OTP email: {str(e)}"
     else:
@@ -1432,6 +1436,12 @@ if "otp_sent" not in st.session_state:
     st.session_state.otp_sent = False
 if "generated_otp" not in st.session_state:
     st.session_state.generated_otp = ""
+if "otp_timestamp" not in st.session_state:
+    st.session_state.otp_timestamp = 0.0
+if "otp_attempts" not in st.session_state:
+    st.session_state.otp_attempts = 0
+if "otp_cooldown_timestamp" not in st.session_state:
+    st.session_state.otp_cooldown_timestamp = 0.0
 if "pending_name" not in st.session_state:
     st.session_state.pending_name = ""
 if "pending_email" not in st.session_state:
@@ -1529,17 +1539,27 @@ with st.container(border=True):
                     send_otp_btn = st.form_submit_button("Send Verification OTP")
                     
                     if send_otp_btn:
-                        if not name_val.strip():
+                        now_time = time.time()
+                        last_sent = getattr(st.session_state, "otp_cooldown_timestamp", 0.0)
+                        cooldown_left = 60 - int(now_time - last_sent)
+                        
+                        if cooldown_left > 0:
+                            st.error(f"Please wait {cooldown_left} seconds before requesting a new OTP verification email.")
+                        elif not name_val.strip():
                             st.error("Please enter your name.")
                         else:
                             is_valid, res_msg = validate_authorized_email(email_val)
                             if not is_valid:
                                 st.error(f"{res_msg}")
                             else:
-                                otp_code = f"{random.randint(100000, 999999)}"
+                                # Cryptographically secure 6-digit OTP generation using secrets module
+                                otp_code = "".join(secrets.choice(string.digits) for _ in range(6))
                                 is_sent, send_msg = send_otp_email(res_msg, otp_code)
                                 if is_sent:
                                     st.session_state.generated_otp = otp_code
+                                    st.session_state.otp_timestamp = time.time()
+                                    st.session_state.otp_cooldown_timestamp = time.time()
+                                    st.session_state.otp_attempts = 0
                                     st.session_state.pending_name = name_val.strip()
                                     st.session_state.pending_email = res_msg
                                     st.session_state.otp_sent = True
@@ -1567,19 +1587,48 @@ with st.container(border=True):
                     verify_btn = st.form_submit_button("Verify OTP & Unlock Download")
                     
                     if verify_btn:
-                        if otp_input.strip() == st.session_state.generated_otp:
+                        now_time = time.time()
+                        sent_time = getattr(st.session_state, "otp_timestamp", 0.0)
+                        elapsed_seconds = now_time - sent_time
+                        attempts = getattr(st.session_state, "otp_attempts", 0)
+                        
+                        if attempts >= 5:
+                            st.session_state.generated_otp = ""
+                            st.session_state.otp_timestamp = 0.0
+                            st.error("Too many failed attempts. For security, this OTP code has been invalidated. Please click 'Resend OTP' below to receive a new code.")
+                        elif elapsed_seconds > 300:  # 5 minutes expiration limit (300s)
+                            st.session_state.generated_otp = ""
+                            st.session_state.otp_timestamp = 0.0
+                            st.error("The OTP verification code has expired (valid for 5 minutes only). Please click 'Resend OTP' below to receive a new code.")
+                        elif (
+                            st.session_state.generated_otp != "" and
+                            hmac.compare_digest(otp_input.strip(), st.session_state.generated_otp)
+                        ):
+                            # OTP Verification Successful - Immediate single-use burn
                             save_lead(st.session_state.pending_name, st.session_state.pending_email)
                             st.session_state.unlocked = True
                             st.session_state.user_name = st.session_state.pending_name
                             st.session_state.user_email = st.session_state.pending_email
                             st.session_state.otp_sent = False
+                            st.session_state.generated_otp = ""
+                            st.session_state.otp_timestamp = 0.0
+                            st.session_state.otp_attempts = 0
                             st.rerun()
                         else:
-                            st.error("Incorrect OTP verification code. Please check your email and try again.")
+                            st.session_state.otp_attempts = attempts + 1
+                            remaining_attempts = 5 - st.session_state.otp_attempts
+                            if remaining_attempts > 0:
+                                st.error(f"Incorrect OTP verification code. You have {remaining_attempts} attempt(s) remaining.")
+                            else:
+                                st.session_state.generated_otp = ""
+                                st.session_state.otp_timestamp = 0.0
+                                st.error("Too many failed attempts. For security, this OTP code has been invalidated. Please click 'Resend OTP' below to receive a new code.")
                 
                 if st.button("← Change Email / Resend OTP", key="reset_otp_btn"):
                     st.session_state.otp_sent = False
                     st.session_state.generated_otp = ""
+                    st.session_state.otp_timestamp = 0.0
+                    st.session_state.otp_attempts = 0
                     st.rerun()
         else:
             safe_name = html.escape(str(st.session_state.user_name))
