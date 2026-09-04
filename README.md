@@ -18,7 +18,6 @@ This web application built with Streamlit serves as the distribution platform fo
   - **Disposable Domain Filtering**: Blocks temporary email services like Mailinator, 10MinuteMail, Yopmail, etc.
   - **Numeric Prefix Filtering**: Rejects fake numeric domain prefixes.
   - **Authoritative DNS MX Resolution**: Performs live Mail Exchange (MX) DNS queries via `dnspython` to verify domain authenticity.
-- 📊 **Lead Data Tracking**: Automatically stores verified user registrations in `data/leads.csv`.
 - 🎨 **Premium Aesthetic & Custom Design**: Custom CSS styling with Google Fonts (*Plus Jakarta Sans* and *Inter*), smooth gradients, card hover animations, and hidden default Streamlit chrome.
 - 🖼️ **Interactive Screenshot Slider**: Modern single-tab slider UI showcasing all 8 application screenshots (Starter Dashboard, AI Enhancer, BG Removal, Video Trimmer, Audio Studio, CogniBot, Dark Mode, Light Mode) with interactive thumbnail ribbons, auto-play, and gesture support.
 - 💻 **System Requirements & Setup Guide**: Built-in interactive guides for quick onboarding.
@@ -75,5 +74,6 @@ CogniFormat Web/
 
 ## 📬 Contact & Support
 
-For feedback, support, or inquiries regarding CogniFormat:
+For feedback, support, report bugs or inquiries regarding CogniFormat:
 - Repository: [AryaAnuj2004/CogniFormat-Web](https://github.com/AryaAnuj2004/CogniFormat-Web)
+- Contact me: [cogniformat@gmail.com](mailto:cogniformat@gmail.com)
