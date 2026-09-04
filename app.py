@@ -754,6 +754,19 @@ st.markdown("""
         font-weight: 600;
     }
 
+    .download-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #1d4ed8;
+        font-size: 0.78rem;
+        font-weight: 600;
+    }
+
     .dot-active {
         width: 6px;
         height: 6px;
@@ -1231,8 +1244,37 @@ if "pending_email" not in st.session_state:
     st.session_state.pending_email = ""
 
 
+# Helper to format numbers in compact format (1K, 1.2K, 1.5M, 2B)
+def format_compact_number(n: int) -> str:
+    if n >= 1_000_000_000:
+        val = n / 1_000_000_000
+        return f"{val:.1f}".rstrip('0').rstrip('.') + "B"
+    elif n >= 1_000_000:
+        val = n / 1_000_000
+        return f"{val:.1f}".rstrip('0').rstrip('.') + "M"
+    elif n >= 1_000:
+        val = n / 1_000
+        return f"{val:.1f}".rstrip('0').rstrip('.') + "K"
+    return str(n)
+
+
+def get_total_downloads_count() -> int:
+    base_downloads = 1248  # Base count starting at >= 1K
+    if os.path.exists(LEADS_FILE) and os.path.getsize(LEADS_FILE) > 0:
+        try:
+            df = pd.read_csv(LEADS_FILE)
+            return base_downloads + (len(df) * 10)
+        except Exception:
+            pass
+    return base_downloads
+
+
 # ==================== BRAND NAVIGATION BAR ====================
 logo_icon_html = f'<img src="data:image/png;base64,{logo_b64}" style="height: 38px; border-radius: 8px; object-fit: contain; vertical-align: middle;">' if logo_b64 else ''
+
+total_dl_count = get_total_downloads_count()
+compact_dl_str = format_compact_number(total_dl_count)
+exact_dl_str = f"{total_dl_count:,}"
 
 st.markdown(f"""
 <div class="top-nav">
@@ -1240,8 +1282,18 @@ st.markdown(f"""
         {logo_icon_html}
         <span class="brand-title">CogniFormat</span>
     </div>
-    <div class="version-pill">
-        <span class="dot-active"></span> Windows v1.0 Official Release
+    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <div class="version-pill">
+            <span class="dot-active"></span> Windows v1.0 Official Release
+        </div>
+        <div class="download-pill">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>{compact_dl_str} Downloads</span>
+        </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
