@@ -567,39 +567,72 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Application-wide Right-Click & Image Protection Script
+# Application-wide Anti-Inspection & DevTools Trap Script
 components.html("""
 <script>
-    try {
-        const doc = window.parent.document;
-        
-        // Suppress right-click context menu globally
-        doc.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-            return false;
-        }, true);
-        
-        // Prevent dragging images
-        doc.addEventListener('dragstart', function(e) {
-            if (e.target.tagName === 'IMG') {
+    (function() {
+        try {
+            const pDoc = window.parent.document;
+            const pWin = window.parent;
+            
+            // 1. Suppress right-click context menu globally
+            pDoc.addEventListener('contextmenu', function(e) {
                 e.preventDefault();
                 return false;
+            }, true);
+            
+            // 2. Prevent dragging images
+            pDoc.addEventListener('dragstart', function(e) {
+                if (e.target.tagName === 'IMG') {
+                    e.preventDefault();
+                    return false;
+                }
+            }, true);
+            
+            // 3. Block inspect & save keyboard shortcuts (Ctrl+S, Ctrl+U, F12, Ctrl+Shift+I/J/C)
+            pDoc.addEventListener('keydown', function(e) {
+                if (
+                    e.keyCode === 123 || // F12
+                    ((e.ctrlKey || e.metaKey) && (e.keyCode === 83 || e.keyCode === 85 || e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) ||
+                    ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67))
+                ) {
+                    e.preventDefault();
+                    return false;
+                }
+            }, true);
+
+            // 4. Anti-DevTools Trap (Freezes DevTools opened via Browser Settings Menu)
+            function enforceDevToolsTrap() {
+                const start = performance.now();
+                (function() {
+                    function trap() {
+                        return 'debugger';
+                    }
+                    eval(trap());
+                })();
+                const end = performance.now();
+                
+                const widthDiff = pWin.outerWidth - pWin.innerWidth > 160;
+                const heightDiff = pWin.outerHeight - pWin.innerHeight > 160;
+                
+                if (widthDiff || heightDiff || (end - start > 100)) {
+                    console.clear();
+                }
             }
-        }, true);
-        
-        // Block inspect & save keyboard shortcuts (Ctrl+S, Ctrl+U, F12, Ctrl+Shift+I)
-        doc.addEventListener('keydown', function(e) {
-            if (
-                e.keyCode === 123 ||
-                ((e.ctrlKey || e.metaKey) && (e.keyCode === 83 || e.keyCode === 85 || e.keyCode === 73 || e.keyCode === 74))
-            ) {
-                e.preventDefault();
-                return false;
-            }
-        }, true);
-    } catch (err) {
-        console.log("Protection active.");
-    }
+
+            setInterval(enforceDevToolsTrap, 300);
+
+            pWin.addEventListener('resize', function() {
+                const widthDiff = pWin.outerWidth - pWin.innerWidth > 160;
+                const heightDiff = pWin.outerHeight - pWin.innerHeight > 160;
+                if (widthDiff || heightDiff) {
+                    console.clear();
+                    (function() { eval('debugger'); })();
+                }
+            });
+
+        } catch (err) {}
+    })();
 </script>
 """, height=0, width=0)
 
